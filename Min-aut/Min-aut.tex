@@ -1,0 +1,187 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage[cm]{fullpage}
+\usepackage[T1]{fontenc}
+\usepackage{microtype, csquotes, lmodern}
+\usepackage{amsmath,amsthm}
+\usepackage{amssymb}
+\usepackage{float}
+\usepackage{xcolor}
+\usepackage{mdframed}
+\usepackage[shortlabels]{enumitem}
+\usepackage{indentfirst}
+\usepackage{hyperref,bm}
+\usepackage{mathrsfs, mathtools}
+
+
+\title{Minimal timed regular languages}
+\author{Shree Ganesh}
+\date{\today}
+
+\newtheoremstyle{break}
+  {\topsep}{\topsep}%
+  {\itshape}{}%
+  {\bfseries}{}%
+  {\newline}{}%
+\theoremstyle{break}
+
+\newtheorem{theorem}{Theorem}[subsection]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{claim}[theorem]{Claim}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+
+
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\R}{\mathbb{R}}
+
+\begin{document}
+
+\maketitle
+\titlepage
+\newpage
+
+\tableofcontents
+\newpage
+
+\section{Introduction}
+
+Let $\Sigma$ be an alphabet. Let $\Sigma^*$ be the set of words over the alphabet $\Sigma$.
+Partial orders on $\Sigma$ can be extended to a partial order on $\Sigma^*$ in several ways.
+We'll describe a few natural ways to do that. 
+
+\begin{definition}
+    Let $(\Sigma,\leq)$ be a partially ordered finite alphabet. The \textbf{generalized prefix order}
+    on $\Sigma^*$ is defined as follows: Let $u,v\in \Sigma^*$ with $u=a_1\dots a_k$, $v=b_1\dots b_l$.
+    $u\leq v$ iff $k\leq l$ and $a_i\leq b_i\;\;\forall 1\leq i\leq k$.
+\end{definition}
+
+
+\begin{definition}
+    Given a partial order '$\leq$' on $\Sigma^*$, for any $L\subseteq \Sigma^*$, we define $MIN(L):=
+    \{w\in L|\;\; \text{there is no } x\in L\; \text{with } x\leq w\}$
+\end{definition}
+
+\subsection{Some commonly known orders}
+
+We fix a partially ordered alphabet $(\Sigma,\geq)$.
+
+\begin{definition}
+    .
+    \begin{enumerate}
+        \item \textbf{Generalized dictionary order:} $u,v\in \Sigma^*$, $u\leq v$ iff $u$ is
+        a prefix of $v$ or $u=pax$ and $b=pby$ where $p$ is the longest common prefix and $a,b\in\Sigma$, $a\leq b$.\\
+        \item \textbf{Generalized lexical order:} $u,v\in \Sigma^*$, $u\leq v$ iff $|u|=|v|$ and $u\leq v$ with respect to the generalized dictionary order.
+    \end{enumerate}
+    
+\end{definition}
+
+\begin{theorem}
+    Let $L$ be a regular language over $\Sigma$ which is recognized by a deterministic 
+    finite automaton with $n$ states. Then,
+
+    \begin{enumerate}
+        \item With respect to the generalized dictionary order, $MIN(L)$ is recognized by a deterministic finite automaton with number of states $\leq (n-1)2^{n-2}+1$.
+        \item With respect to the generalized "lexicographic" order, $MIN(L)$ is recognized by a deterministic finite automaton with number of states $O(n\cdot 2^n)$.      
+    \end{enumerate}
+\end{theorem}
+
+The construction of these is as follows. Let $\mathcal{A}=(Q,\Sigma,\delta,q_0,F)$ be a deterministic finite automaton recognizing $L$. Let $<$ be an order on $\Sigma$.
+
+\begin{enumerate}[(i)]
+    \item When the order is extended to a generalized dictionary order, consider the following timed automaton. We can assume that all out-edges of the accept states of $\mathcal{A}$ have been dropped and that all accept states have been coalesced into a single accept state $f$. 
+        {\begin{itemize}
+            \item Set of states: $Q$.
+            \item Transition function: 
+                \[
+                    \Delta(q,a)=
+                    \begin{cases}
+                        \delta(q,a) &\quad \text{if for all }b\in\Sigma,\delta(q,b)=\phi \text{ whenever }b<a\\
+                        \phi &\quad \text{otherwise}. 
+                    \end{cases}    
+                \]
+            \item Accept states: $\{f\}$.
+        \end{itemize}}
+    \item When we have a generalized "lexicographic" order instead, we have the following construction.
+    {\begin{itemize}
+        \item Set of states: $Q\times 2^Q$.
+        \item Transition function: Given a state $(q,S)$ and a letter $a\in\Sigma$, define, $$S^{q,a}=\{\delta(q,b)\in Q:\; b\in\Sigma, b<a\}\cup\{\delta(p.c)\in Q:\; p\in S,c\in\Sigma,c\leq a\;\text{or }c>a\}$$
+        Now, \[
+                \Delta((q,S),a)=
+                \begin{cases}
+                    (\delta(q,a),S^{q,a}) &\quad \text{if } \delta(q,a)\in Q\\
+                    \phi &\quad \text{otherwise} 
+                \end{cases}    
+            \]
+        \item Accept states: $\{(q,S)|\; S\cap F=\phi\}$.
+    \end{itemize}}
+\end{enumerate} 
+
+\section{The case of timed automata}
+
+Here we explore ways to generalize above ideas to the case of timed automata. Extracting "minimal timed languages" with respect to the time can be particularly useful in synthesis problems.\\
+
+Let $L$ be a timed language over the alphabet $\Sigma$. We introduce the following definitions.\\
+
+Suppose $\prec$ is a partial order defined on $\Sigma$ and $<$ a partial order\footnote{We define it as a partial order instead of a total order to account for the setting we'll be working with } on the set of all time sequences $\{(\delta_1,\dots,\delta_n)|\;n\in \N, \delta_i\geq 0\}$.
+\begin{definition}
+    \begin{enumerate}
+        \item Define $MIN(L)$ to be the language $\{(w,\tau)|\; \nexists (w',\tau')\in L \text{ such that }w'\prec w \}$.
+        \item Define $MIN_T(L)$ to be the language $\{(w,\tau)|\; \nexists (w',\tau')\in L \text{ such that }\tau'\prec \tau\}$
+    \end{enumerate}
+\end{definition}
+
+When analysing $MIN_T(L)$, we will primarily be working with the following orders on the time sequences. We denote the set of all time sequences by $T$ and for a given language $L$, the set of all time sequences $T=(\tau_1\dots,\tau_n)$ such that $(w,\tau)\in L$ by $T_L(w)$. We'll also use the orders $\prec$ and $<$ as defined previously as orders on $\Sigma$ and $T$ respectively.\\
+
+\begin{theorem}
+    Let $L$ be deterministic timed regular. Let the order $\prec$ be extended to the generalized dictionary (or subsequence, sebsegment, prefix, suffix) order on $\Sigma^*$. Then, 
+    
+    \begin{enumerate}
+        \item $MIN(L)$ is determinisitc timed regular.
+        \item $MIN_T(L)$ is deterministic timed regular when $<$ is the generalized "lexicographic" order on $T$.
+    \end{enumerate}
+    
+\end{theorem}
+\begin{proof}[\textbf{Proof of the first part:}]
+
+    The proof of the second part requires a little bit more work and we'll build up to it after presenting a proof for the first part.
+    Suppose there is a deterministic timed automaton $\mathcal{A}=(Q,\Sigma,\delta, X, q_0, F)$ recognizing $L$. Then, $MIN(L)$ is recognized by a deterministic timed automaton $\mathcal{A}'$ defined as follows. Since $UNTIME(L)$ is regular, $MIN(UNTIME(L))$ is also regular. Let $\mathcal{B}=(Q',\Sigma,\delta', q'_0, F')$ be a deterministic finite automaton recognizing $MIN(UNTIME(L))$. Let $\mathcal{A}'=(S,\Sigma,\Delta,s_0,X,\tilde{F})$ where,
+
+    \begin{enumerate}
+        \item $S=Q\times Q'$
+        \item $((q,q'),a,(r,r'))\in\Delta$ with a set of clock constraints/reset $C$ iff $(q,a,r)\in\delta$ with a set of clock constraints/reset $C$ and $(q',a,r')\in\delta'$.
+        \item $s_0=(1_0,q'_0)$.
+        \item $\tilde{F}=F\times F'$.
+    \end{enumerate}
+
+    Then it's easy to see that $(w,\tau)$ is accepted by $\mathcal{A}'$ iff $(w,\tau)$ is accepted by $\mathcal{A}$ and $w$ is accepted by $\mathcal{B}$ iff $(w,\tau)\in MIN(L)$.
+\end{proof}
+
+Analysing the language $MIN_T(L)$ is slightly harder since here, we are restricting the language based on time duration constraints. Consider "$<$" to be the natural order on $R^{\geq 0}$. We can extend it to the lexicographic ordering on $T$. That is, given $\tau=(\tau_1,\dots,\tau_n)$ and $\delta=(\delta_1,\dots,\delta_n)$ for some $n\in \N$. Then, $\tau<\delta$ iff $\tau_i < \delta_i$ for all $1\leq i \leq n$.\\
+
+\begin{lemma}
+    Let $\mathcal{A}$ be a DTA accepting $L$ with max constant $M$ and integer constraints. Then, $(w,\tau)\in MIN_T(L) \implies$ $0\leq\tau_i\leq M$ and $\tau_i$ is an integer for all $1\leq i\leq n$.
+\end{lemma}
+\begin{proof}
+    Firstly, if some $\tau_i> M$. Let the transition accepting $w_i$ in the run $\rho$ accepting $(w,\tau)$ be $(q,a,q')$ with some clock constraints $C$ and clock resets $[R]$. Let $r$ be the region in which the clock valuations $(x_1,x_2,\dots,x_n)$ is after the transition. Then, note that, setting $\tau_i=M$ also makes the clocks satisfy the constraints $C$ and after reset, end up in the same region $r$. Therefore, there is an accepting run of $(w,\tau_1\dots\tau_i'=M\tau_{i+1}\dots \tau_n')$ in $\mathcal{A}$ and $\tau'<\tau$ where $\tau'=\tau_1\dots\tau_i'=M\tau_{i+1}\dots \tau_n'$. This is a contradiction since $(w,\tau)$ is in $MIN_T(L)$. Therefore, for all $i$, $\tau_i\leq M$.\\
+
+    Similar reasoning shows that $\tau_i$ is an integer for all $1\leq i\leq n$.
+\end{proof}
+
+Construct the following DTA $\mathcal{A}_I$ from $\mathcal{A}$. The only change in $\mathcal{A}_I$ that we make is the set of constraints. Suppose $x_i \in C_i$, $1\leq i\leq n$ be the set of constraints corresponding to a transition $t$. Then, we replace this by te set of constraints $x_i \in C_i\cap [2M]$\footnote{Here $[2M]$ is the set $\{1,2,\dots, M\}$}, $1\leq i\leq n$. This can be explicitly done by replacing $x_i\in C_i$ with $\wedge_{z\in C_i\cap [2M]} (x_i=z)$. Then, $MIN_T(L) = MIN_T(L(\mathcal{A}_I))$. This is because, from the previous lemma, every run in $\mathcal{A}$ accepting a minimal pair $(w,\tau)$ is such that each $\tau_i$ is integral and lesser than or equal to $M$. Therefore, the same run in $\mathcal{A}_I$ accepts $(w,\tau)$. On the other hand, $L(\mathcal{A}_I)\subseteq L$.\\
+
+Now, we are set to prove the second part of our theorem. Note that the clock valuations and elapse times are all always integral during runs in $\mathcal{A}$ accepting minimal pairs $(w,\tau)$. So, we construct the following deterministic timed automaton from $\mathcal{A}$. Let $\Pi=\Sigma\times [M]$ and $\mathcal{B}$ be the timed automaton with the following description.
+\begin{itemize}
+    \item States: $Q\times [M]^{|X|}$.
+    \item Alphabet: $\Pi$.
+    \item Start state: $(q_0,\overline{0})$ (here, $\overline{0}$ is the zero vector representing the clock valuations).
+    \item Accepting states: $F$.
+    \item Set of clocks: $X$.
+    \item Transitions: \{$((q,t_1),(a,\delta),(q',t_2), C, [R])$ for every transition $(q,a,q',C,[R])$ of $\mathcal{A}_I$ and every $t_1,t_2\in[M]^{|X|}$ and $\delta\in [M]$ such that $t_1+(\delta,\dots,\delta)=t_2$\}
+\end{itemize}
+
+Its easy to see that $UNTIME(\mathcal{B})=L(\mathcal{A}_I)$. And so, when $\Pi$ is given the partial order $\prec$ such that $(a,\delta_1)<(a,\delta_2)$ iff $\delta_1<\delta_2$ for all $a\in\Sigma$, this order can be generalize to the generalized dictionary order on $\Pi^*$ (which we will still denote by $\prec$ for convenience). Under this order, $MIN(UNTIME(\mathcal{B})=MIN_T(L(\mathcal{A}_I)))$. And therefore, $MIN_T(L(\mathcal{A}_I))=MIN_T(L(\mathcal{A}))$ is timed regular.
+\end{document}
